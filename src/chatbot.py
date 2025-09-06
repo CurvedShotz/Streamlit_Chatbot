@@ -2,6 +2,9 @@
 
 import requests
 import streamlit as st
+import os
+import json
+from datetime import datetime
 
 # Load API key from Streamlit secrets
 API_KEY = st.secrets["huggingface"]["api_key"]
@@ -36,3 +39,17 @@ def chatbot_response(user_input: str) -> str:
     Wrapper for chatbot response logic.
     """
     return query_huggingface(user_input)
+
+def log_conversation(messages, folder="data/chat_logs"):
+    """
+    Save chat history to a JSON file.
+    Each session gets a timestamped filename.
+    """
+    os.makedirs(folder, exist_ok=True)  # make sure folder exists
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filepath = os.path.join(folder, f"chat_{timestamp}.json")
+
+    with open(filepath, "w", encoding="utf-8") as f:
+        json.dump(messages, f, indent=2, ensure_ascii=False)
+
+    return filepath

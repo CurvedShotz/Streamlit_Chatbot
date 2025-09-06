@@ -1,5 +1,6 @@
 import streamlit as st
 from src.chatbot import chatbot_response
+from src.chatbot import chatbot_response, log_conversation
 
 # Streamlit page config
 st.set_page_config(page_title="Chatbot V3", page_icon="💬", layout="centered")
@@ -36,3 +37,9 @@ if user_input:
 
     # Rerun to refresh UI with new message
     st.experimental_rerun()
+
+
+# Add a save button below chat
+if st.button("💾 Save Chat"):
+    filepath = log_conversation(st.session_state["messages"])
+    st.success(f"Chat saved to {filepath}")
