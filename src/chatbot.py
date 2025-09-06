@@ -1,5 +1,3 @@
-# Chatbot logic will go here
-
 import requests
 import streamlit as st
 import os
@@ -16,20 +14,31 @@ API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Inst
 headers = {"Authorization": f"Bearer {API_KEY}"}
 
 
-def query_huggingface(prompt: str) -> str:
+def query_huggingface(prompt: str, max_tokens: int = 200, temperature: float = 0.7) -> str:
     """
-    Send a prompt to the Hugging Face Inference API and return the response.
+    Send a prompt to Hugging Face Inference API and return the response.
+    Includes timeout and error handling.
     """
-    payload = {"inputs": prompt}
-    response = requests.post(API_URL, headers=headers, json=payload)
+    payload = {
+        "inputs": prompt,
+        "parameters": {
+            "max_new_tokens": max_tokens,
+            "temperature": temperature
+        }
+    }
 
-    if response.status_code != 200:
-        return f"⚠️ API Error {response.status_code}: {response.text}"
-
-    # API returns a list of dictionaries
-    result = response.json()
     try:
-        return result[0]["generated_text"]
+        response = requests.post(API_URL, headers=headers, json=payload, timeout=60)
+        response.raise_for_status()
+        result = response.json()
+
+        # Hugging Face API returns a list with 'generated_text'
+        return result[0].get("generated_text", "⚠️ No text returned by model.")
+
+    except requests.exceptions.Timeout:
+        return "⚠️ API Timeout: model took too long to respond."
+    except requests.exceptions.RequestException as e:
+        return f"⚠️ API Error: {e}"
     except (KeyError, IndexError, TypeError):
         return "⚠️ Unexpected API response format."
 
@@ -38,18 +47,26 @@ def chatbot_response(user_input: str) -> str:
     """
     Wrapper for chatbot response logic.
     """
+    # Strip input to avoid sending empty messages
+    if not user_input.strip():
+        return "⚠️ Please enter a message."
+    
     return query_huggingface(user_input)
+
 
 def log_conversation(messages, folder="data/chat_logs"):
     """
     Save chat history to a JSON file.
     Each session gets a timestamped filename.
     """
-    os.makedirs(folder, exist_ok=True)  # make sure folder exists
+    os.makedirs(folder, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filepath = os.path.join(folder, f"chat_{timestamp}.json")
 
+    # Save messages as list of dictionaries for readability
+    json_messages = [{"role": role, "text": text} for role, text in messages]
+
     with open(filepath, "w", encoding="utf-8") as f:
-        json.dump(messages, f, indent=2, ensure_ascii=False)
+        json.dump(json_messages, f, indent=2, ensure_ascii=False)
 
     return filepath

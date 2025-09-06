@@ -1,6 +1,6 @@
 import streamlit as st
-from src.chatbot import chatbot_response
-from src.chatbot import chatbot_response, log_conversation
+from chatbot import chatbot_response, log_conversation
+
 
 # Streamlit page config
 st.set_page_config(page_title="Chatbot V3", page_icon="💬", layout="centered")
@@ -36,7 +36,7 @@ if user_input:
     st.session_state["messages"].append(("bot", response))
 
     # Rerun to refresh UI with new message
-    st.experimental_rerun()
+    st.rerun()
 
 
 # Add a save button below chat
