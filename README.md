@@ -31,3 +31,20 @@ This app uses the **Hugging Face Inference API**, which requires an access token
 [huggingface]
 api_key = "hf_your_token_here"
 
+
+
+Chatbot_V3/
+│── README.md # Project overview
+│── requirements.txt # Dependencies
+│── .gitignore # Ignore venv, secrets, cache
+│
+├── data/
+│ └── chat_logs/ # Saved conversations (JSON)
+│
+├── src/
+│ │── init.py
+│ │── chatbot.py # API calls + logging
+│ │── streamlit_app.py # Streamlit interface
+│
+└── tests/
+└── test_chatbot.py # (Optional) unit tests
